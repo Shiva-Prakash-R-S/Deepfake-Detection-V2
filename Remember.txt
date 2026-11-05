@@ -3,4 +3,4 @@
 
 
 cd backend 
-python add.py
+python app.py

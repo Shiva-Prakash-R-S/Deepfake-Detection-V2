@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In | DeepFake Detection V2{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <div class="auth-header">
+    <h2>Welcome Back</h2>
+    <p>Sign in to your DeepFake Detection V2 account</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+    {{ form.hidden_tag() }}
+
+    <!-- Email Address -->
+    <div class="form-group">
+      {{ form.email.label(class="form-label") }}
+      {{ form.email(class="form-input" + (" is-invalid" if form.email.errors else "")) }}
+      {% for error in form.email.errors %}
+        <div class="field-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Password -->
+    <div class="form-group">
+      {{ form.password.label(class="form-label") }}
+      <div class="input-container">
+        {{ form.password(class="form-input" + (" is-invalid" if form.password.errors else ""), id="login-password") }}
+        <button type="button" class="password-toggle" data-target="login-password">Show</button>
+      </div>
+      {% for error in form.password.errors %}
+        <div class="field-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Remember Me -->
+    <div class="form-check">
+      {{ form.remember(id="remember-me") }}
+      <label for="remember-me">{{ form.remember.label.text }}</label>
+    </div>
+
+    <!-- Submit Button -->
+    <div style="margin-top: 1.5rem;">
+      {{ form.submit(class="btn-primary") }}
+    </div>
+  </form>
+
+  <div class="auth-footer">
+    Don't have an account? <a href="{{ url_for('auth.register') }}">Create an account</a>
+  </div>
+</div>
+{% endblock %}

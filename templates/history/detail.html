@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction #{{ prediction.id }} | DeepFake Detection V2{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-container {
+    width: 100%;
+    max-width: 950px;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .detail-header-left h2 {
+    font-size: 1.85rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .detail-header-left p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .detail-actions {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .btn-back {
+    background-color: var(--bg-card);
+    border: 1px solid var(--bg-card-border);
+    color: var(--text-main);
+    padding: 0.65rem 1.15rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn-back:hover {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+
+  .btn-download-pdf {
+    background: var(--accent-gradient);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.2s;
+  }
+
+  .btn-download-pdf:hover {
+    opacity: 0.9;
+  }
+
+  /* Two Column Grid */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 1.75rem;
+  }
+
+  @media (max-width: 820px) {
+    .detail-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .detail-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--bg-card-border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    box-shadow: var(--shadow);
+  }
+
+  .detail-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  /* Image Subject Preview */
+  .subject-img-wrap {
+    background-color: #0b1120;
+    border: 1px solid var(--bg-card-border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 260px;
+    max-height: 380px;
+    margin-bottom: 1rem;
+  }
+
+  .subject-img {
+    width: 100%;
+    height: 100%;
+    max-height: 380px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .hash-box {
+    background-color: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--bg-card-border);
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .hash-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+  }
+
+  .hash-val {
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: var(--accent-cyan);
+    word-break: break-all;
+    user-select: all;
+  }
+
+  /* Verdict Banner */
+  .verdict-banner {
+    padding: 1.25rem;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .banner-fake {
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1.5px solid #ef4444;
+  }
+
+  .banner-real {
+    background-color: rgba(16, 185, 129, 0.15);
+    border: 1.5px solid #10b981;
+  }
+
+  .banner-badge {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.35rem;
+  }
+
+  .banner-fake .banner-badge { color: #f87171; }
+  .banner-real .banner-badge { color: #34d399; }
+
+  .banner-sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* Spec Rows */
+  .spec-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.9rem;
+  }
+
+  .spec-label {
+    color: var(--text-muted);
+  }
+
+  .spec-val {
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .progress-wrap {
+    margin-top: 1rem;
+  }
+
+  .progress-bar-bg {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    height: 10px;
+    overflow: hidden;
+    margin-top: 0.35rem;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+  }
+
+  .fill-fake {
+    background-color: var(--danger-color);
+  }
+
+  .fill-real {
+    background-color: var(--success-color);
+  }
+
+  /* Disclaimer Box */
+  .disclaimer-card {
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px dashed var(--bg-card-border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .disclaimer-card strong {
+    color: var(--text-main);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+  <div class="detail-header">
+    <div class="detail-header-left">
+      <h2>Forensic Verification Report #{{ prediction.id }}</h2>
+      <p>Analysis performed on {{ prediction.created_at.strftime("%B %d, %Y at %H:%M:%S UTC") }}</p>
+    </div>
+    <div class="detail-actions">
+      <a href="{{ url_for('history.list_history') }}" class="btn-back">
+        <span>&larr; All History</span>
+      </a>
+      <a href="{{ url_for('history.download_report', prediction_id=prediction.id) }}" class="btn-download-pdf">
+        <span>📄 Download PDF Report</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <!-- Left Column: Image Subject -->
+    <div class="detail-card">
+      <h3>📷 Subject Image</h3>
+      <div class="subject-img-wrap">
+        <img src="{{ url_for('history.serve_image', prediction_id=prediction.id) }}" 
+             alt="{{ prediction.original_filename }}" 
+             class="subject-img">
+      </div>
+
+      <div class="spec-row">
+        <span class="spec-label">Original Filename</span>
+        <span class="spec-val" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ prediction.original_filename }}">{{ prediction.original_filename }}</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Resolution</span>
+        <span class="spec-val">{{ prediction.image_width }} × {{ prediction.image_height }} px</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Format</span>
+        <span class="spec-val">{{ prediction.image_format }}</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Face Localization</span>
+        <span class="spec-val">{{ "Face isolated & analyzed" if prediction.face_detected else "Full image analyzed" }}</span>
+      </div>
+
+      <div class="hash-box">
+        <div class="hash-label">Image SHA-256 Checksum</div>
+        <div class="hash-val">{{ prediction.image_sha256 }}</div>
+      </div>
+    </div>
+
+    <!-- Right Column: Forensic Results -->
+    <div class="detail-card">
+      <h3>📊 Forensic Findings</h3>
+
+      {% set is_fake = prediction.predicted_label.upper() == 'FAKE' %}
+      <div class="verdict-banner {{ 'banner-fake' if is_fake else 'banner-real' }}">
+        <div class="banner-badge">
+          {{ "SUSPECTED DEEPFAKE" if is_fake else "AUTHENTIC (REAL IMAGE)" }}
+        </div>
+        <div class="banner-sub">
+          Confidence Score: <strong>{{ "%.2f"|format(prediction.confidence) }}%</strong> (Decision Threshold: {{ "%.2f"|format(prediction.threshold_used) }})
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="spec-row" style="border: none; padding-bottom: 0;">
+          <span class="spec-label">Fake Probability</span>
+          <span class="spec-val" style="color: #f87171;">{{ "%.2f"|format(prediction.probability_fake) }}%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-fake" style="width: {{ prediction.probability_fake }}%;"></div>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="spec-row" style="border: none; padding-bottom: 0;">
+          <span class="spec-label">Real Probability</span>
+          <span class="spec-val" style="color: #34d399;">{{ "%.2f"|format(prediction.probability_real) }}%</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-real" style="width: {{ prediction.probability_real }}%;"></div>
+        </div>
+      </div>
+
+      <div class="spec-row" style="margin-top: 1.25rem;">
+        <span class="spec-label">Confidence Definition</span>
+        <span class="spec-val" style="font-size: 0.8rem; color: var(--accent-cyan);">max(P_real, P_fake)</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Model Architecture</span>
+        <span class="spec-val" style="font-size: 0.85rem;">{{ prediction.model_name }}</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Model Version</span>
+        <span class="spec-val">{{ prediction.model_version }}</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Classification Threshold</span>
+        <span class="spec-val">{{ "%.2f"|format(prediction.threshold_used) }}</span>
+      </div>
+      <div class="spec-row">
+        <span class="spec-label">Inference Latency</span>
+        <span class="spec-val">{{ "%.1f"|format(prediction.inference_time_ms) }} ms</span>
+      </div>
+
+      <div class="disclaimer-card">
+        ⚖️ <strong>Legal & Forensic Disclaimer:</strong> This automated analysis provides a probabilistic estimate based on deep neural network spatial artifacts and frequency spectrum analysis. Model predictions represent algorithmic estimations, not definitive or infallible proof of image provenance or manipulation.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

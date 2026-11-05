@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | DeepFake Detection V2{% endblock %}
+
+{% block extra_head %}
+<style>
+  .dashboard-container {
+    width: 100%;
+    max-width: 900px;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .dashboard-hero {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .dashboard-hero h2 {
+    font-size: 1.85rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .dashboard-hero p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .workbench-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .workbench-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .panel-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--bg-card-border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dropzone {
+    border: 2px dashed var(--bg-card-border);
+    border-radius: 10px;
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    background-color: rgba(15, 23, 42, 0.5);
+    transition: all 0.2s ease;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent-cyan);
+    background-color: rgba(6, 182, 212, 0.05);
+  }
+
+  .dropzone-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--accent-cyan);
+  }
+
+  .dropzone-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .dropzone-text strong {
+    color: var(--accent-cyan);
+  }
+
+  .preview-img {
+    max-width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 8px;
+    display: none;
+  }
+
+  .btn-analyze {
+    margin-top: 1.25rem;
+    background: var(--accent-gradient);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-analyze:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Result Display */
+  .result-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .result-content {
+    display: none;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .prediction-badge {
+    display: inline-block;
+    padding: 0.5rem 1.25rem;
+    border-radius: 30px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+  }
+
+  .badge-fake {
+    background-color: rgba(239, 68, 68, 0.2);
+    border: 1px solid #ef4444;
+    color: #f87171;
+  }
+
+  .badge-real {
+    background-color: rgba(16, 185, 129, 0.2);
+    border: 1px solid #10b981;
+    color: #34d399;
+  }
+
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.875rem;
+  }
+
+  .metric-label {
+    color: var(--text-muted);
+  }
+
+  .metric-val {
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .progress-wrap {
+    margin-top: 1rem;
+  }
+
+  .progress-bar-bg {
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    height: 10px;
+    overflow: hidden;
+    margin-top: 0.35rem;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+  }
+
+  .fill-fake {
+    background-color: var(--danger-color);
+  }
+
+  .fill-real {
+    background-color: var(--success-color);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  <div class="dashboard-hero">
+    <h2>Forensic Analysis Workbench</h2>
+    <p>Upload an image to perform dual-branch spatial & frequency authenticity analysis</p>
+  </div>
+
+  <div class="workbench-grid">
+    <!-- Upload Panel -->
+    <div class="panel-card">
+      <h3>📁 Select Image</h3>
+      <div class="dropzone" id="dropzone">
+        <div id="dropzone-prompt">
+          <div class="dropzone-icon">📷</div>
+          <p class="dropzone-text"><strong>Click to browse</strong> or drag & drop</p>
+          <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.4rem;">Supports JPG, PNG, WEBP, BMP</p>
+        </div>
+        <img id="preview-image" class="preview-img" alt="Preview">
+        <input type="file" id="file-input" accept="image/*" style="display: none;">
+      </div>
+
+      <button id="btn-analyze" class="btn-analyze" disabled>
+        <span>🔍 Analyze Authenticity</span>
+      </button>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="panel-card">
+      <h3>📊 Forensic Verdict</h3>
+
+      <div id="result-placeholder" class="result-placeholder">
+        <span style="font-size: 2rem; margin-bottom: 0.5rem;">🔬</span>
+        <p>No image analyzed yet.<br>Select an image on the left and click Analyze.</p>
+      </div>
+
+      <div id="result-content" class="result-content">
+        <div style="text-align: center;">
+          <div id="prediction-badge" class="prediction-badge">VERDICT</div>
+        </div>
+
+        <div class="metric-row">
+          <span class="metric-label">Confidence Score</span>
+          <span id="confidence-val" class="metric-val">--%</span>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="metric-row" style="border: none; padding-bottom: 0;">
+            <span class="metric-label">Fake Probability</span>
+            <span id="fake-prob-val" class="metric-val" style="color: #f87171;">--%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="fake-progress" class="progress-bar-fill fill-fake" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="metric-row" style="border: none; padding-bottom: 0;">
+            <span class="metric-label">Real Probability</span>
+            <span id="real-prob-val" class="metric-val" style="color: #34d399;">--%</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div id="real-progress" class="progress-bar-fill fill-real" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="metric-row" style="margin-top: 1rem;">
+          <span class="metric-label">Face Detection</span>
+          <span id="face-val" class="metric-val">--</span>
+        </div>
+
+        <div class="metric-row">
+          <span class="metric-label">Inference Time</span>
+          <span id="time-val" class="metric-val">-- s</span>
+        </div>
+
+        <div class="metric-row">
+          <span class="metric-label">Active Architecture</span>
+          <span id="model-val" class="metric-val" style="font-size: 0.8rem; color: var(--accent-cyan);">EfficientNet-B0 + FFT + Attention V4</span>
+        </div>
+
+        <!-- History Save Status & Quick Actions -->
+        <div id="save-status-box" style="display: none; margin-top: 1.25rem; padding: 0.85rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 0.4rem; color: #34d399; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.65rem;">
+            <span>✅</span>
+            <span id="save-status-text">Prediction saved to database</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a id="btn-view-details" href="#" style="padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; text-decoration: none; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; display: inline-flex; align-items: center; gap: 0.3rem;">
+              <span>🔍 View Details</span>
+            </a>
+            <a id="btn-download-pdf" href="#" style="padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; text-decoration: none; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.4); color: #67e8f9; display: inline-flex; align-items: center; gap: 0.3rem;">
+              <span>📄 Download PDF</span>
+            </a>
+            <a href="{{ url_for('history.list_history') }}" style="padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.82rem; font-weight: 600; text-decoration: none; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--bg-card-border); color: var(--text-main); display: inline-flex; align-items: center; gap: 0.3rem;">
+              <span>📜 View History</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const dropzone = document.getElementById("dropzone");
+  const fileInput = document.getElementById("file-input");
+  const previewImage = document.getElementById("preview-image");
+  const dropzonePrompt = document.getElementById("dropzone-prompt");
+  const btnAnalyze = document.getElementById("btn-analyze");
+
+  const resultPlaceholder = document.getElementById("result-placeholder");
+  const resultContent = document.getElementById("result-content");
+  const predictionBadge = document.getElementById("prediction-badge");
+  const confidenceVal = document.getElementById("confidence-val");
+  const fakeProbVal = document.getElementById("fake-prob-val");
+  const fakeProgress = document.getElementById("fake-progress");
+  const realProbVal = document.getElementById("real-prob-val");
+  const realProgress = document.getElementById("real-progress");
+  const faceVal = document.getElementById("face-val");
+  const timeVal = document.getElementById("time-val");
+
+  let currentFile = null;
+
+  dropzone.addEventListener("click", () => fileInput.click());
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  fileInput.addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFile(e.target.files[0]);
+    }
+  });
+
+  function handleFile(file) {
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImage.src = e.target.result;
+      previewImage.style.display = "block";
+      dropzonePrompt.style.display = "none";
+      btnAnalyze.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  btnAnalyze.addEventListener("click", async () => {
+    if (!currentFile) return;
+
+    btnAnalyze.disabled = true;
+    btnAnalyze.innerHTML = "<span>⏳ Analyzing with AI...</span>";
+
+    const formData = new FormData();
+    formData.append("image", currentFile);
+
+    try {
+      const response = await fetch("/predict", {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Inference failed with status " + response.status);
+      }
+
+      const data = await response.json();
+      displayResults(data);
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      btnAnalyze.disabled = false;
+      btnAnalyze.innerHTML = "<span>🔍 Analyze Authenticity</span>";
+    }
+  });
+
+  function displayResults(data) {
+    resultPlaceholder.style.display = "none";
+    resultContent.style.display = "block";
+
+    const isFake = data.prediction.toLowerCase() === "fake";
+    predictionBadge.textContent = isFake ? "FAKE (DEEPFAKE)" : "REAL IMAGE";
+    predictionBadge.className = "prediction-badge " + (isFake ? "badge-fake" : "badge-real");
+
+    confidenceVal.textContent = data.confidence.toFixed(2) + "%";
+    fakeProbVal.textContent = data.fake_probability.toFixed(2) + "%";
+    fakeProgress.style.width = data.fake_probability + "%";
+
+    realProbVal.textContent = data.real_probability.toFixed(2) + "%";
+    realProgress.style.width = data.real_probability + "%";
+
+    faceVal.textContent = data.face_detected ? "Face detected & cropped" : "Full image evaluated";
+    timeVal.textContent = data.inference_time + " s";
+
+    // Show save status and wire up quick action links
+    const saveStatusBox = document.getElementById("save-status-box");
+    if (data.saved && data.prediction_id) {
+      const saveStatusText = document.getElementById("save-status-text");
+      const btnViewDetails = document.getElementById("btn-view-details");
+      const btnDownloadPdf = document.getElementById("btn-download-pdf");
+
+      saveStatusText.textContent = `Prediction #${data.prediction_id} successfully recorded in history`;
+      btnViewDetails.href = data.details_url;
+      btnDownloadPdf.href = data.download_url;
+      saveStatusBox.style.display = "block";
+    } else {
+      saveStatusBox.style.display = "none";
+    }
+  }
+</script>
+{% endblock %}

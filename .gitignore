@@ -34,3 +34,58 @@ frontend/dist/
 
 # Environment
 .env
+
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Flask
+instance/
+uploads/
+
+# Models
+*.pth
+*.h5
+*.keras
+*.pt
+*.onnx
+
+# Dataset
+dataset/
+
+# Reports
+reports/
+
+# VS Code
+.vscode/
+
+# React
+frontend/node_modules/
+frontend/dist/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/

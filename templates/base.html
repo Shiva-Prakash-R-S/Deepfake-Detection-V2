@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DeepFake Detection V2{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <a href="{{ url_for('home') }}" class="brand">
+      <div class="brand-icon">🛡️</div>
+      <div class="brand-text">
+        <h1>DeepFake Detection V2</h1>
+        <span>AI-Powered Image Authenticity Analysis</span>
+      </div>
+    </a>
+
+    <nav class="nav-links">
+      {% if current_user.is_authenticated %}
+        <span class="user-badge">
+          Signed in as <span class="user-name">{{ current_user.full_name }}</span>
+        </span>
+        <a href="{{ url_for('home') }}" class="nav-link">Detector</a>
+        <a href="{{ url_for('history.list_history') }}" class="nav-link">History</a>
+        <a href="{{ url_for('auth.change_password') }}" class="nav-link">Change Password</a>
+        <form action="{{ url_for('auth.logout') }}" method="POST" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="nav-link" style="background: none; border: none; cursor: pointer;">Logout</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn-nav">Register</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="main-content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="alerts-container">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+    <div class="privacy-notice">
+      🔒 <strong>Security Notice:</strong> User authentication safeguards access to forensics analysis tools. AI detection models analyze subtle frequency and spatial patterns to assist forensic screening.
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 DeepFake Detection V2. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Universal Show / Hide Password toggle logic
+    document.addEventListener("DOMContentLoaded", function () {
+      const toggles = document.querySelectorAll(".password-toggle");
+      toggles.forEach(btn => {
+        btn.addEventListener("click", function () {
+          const targetId = this.getAttribute("data-target");
+          const input = document.getElementById(targetId);
+          if (input) {
+            if (input.type === "password") {
+              input.type = "text";
+              this.textContent = "Hide";
+            } else {
+              input.type = "password";
+              this.textContent = "Show";
+            }
+          }
+        });
+      });
+    });
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

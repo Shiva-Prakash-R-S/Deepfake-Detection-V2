@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Register | DeepFake Detection V2{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <div class="auth-header">
+    <h2>Create Account</h2>
+    <p>Sign up to access AI image authenticity analysis</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+    {{ form.hidden_tag() }}
+
+    <!-- Full Name -->
+    <div class="form-group">
+      {{ form.full_name.label(class="form-label") }}
+      {{ form.full_name(class="form-input" + (" is-invalid" if form.full_name.errors else "")) }}
+      {% for error in form.full_name.errors %}
+        <div class="field-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Email Address -->
+    <div class="form-group">
+      {{ form.email.label(class="form-label") }}
+      {{ form.email(class="form-input" + (" is-invalid" if form.email.errors else "")) }}
+      {% for error in form.email.errors %}
+        <div class="field-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Password -->
+    <div class="form-group">
+      {{ form.password.label(class="form-label") }}
+      <div class="input-container">
+        {{ form.password(class="form-input" + (" is-invalid" if form.password.errors else ""), id="register-password") }}
+        <button type="button" class="password-toggle" data-target="register-password">Show</button>
+      </div>
+      {% for error in form.password.errors %}
+        <div class="field-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="form-group">
+      {{ form.confirm_password.label(class="form-label") }}
+      <div class="input-container">
+        {{ form.confirm_password(class="form-input" + (" is-invalid" if form.confirm_password.errors else ""), id="register-confirm-password") }}
+        <button type="button" class="password-toggle" data-target="register-confirm-password">Show</button>
+      </div>
+      {% for error in form.confirm_password.errors %}
+        <div class="field-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Submit Button -->
+    <div style="margin-top: 1.5rem;">
+      {{ form.submit(class="btn-primary") }}
+    </div>
+  </form>
+
+  <div class="auth-footer">
+    Already have an account? <a href="{{ url_for('auth.login') }}">Sign In</a>
+  </div>
+</div>
+{% endblock %}
